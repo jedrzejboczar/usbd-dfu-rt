@@ -70,16 +70,6 @@
 //! }
 //! ```
 
-// Logic for jumping to the embedded STM32F072 DFU bootloader. The board enumerates with the
-// DfuRuntimeClass so that host can issue a DETACH command. When this happens, we write a special
-// magic value to RAM and perform system reset. After reset we check the magic value in RAM and if
-// a jump has been requested we clear the magic value and jump to System Memory where the
-// bootloader is located.
-//
-// To perform the checking we use a function with pre_init attribute which will be run before any
-// code that initializes the RAM. We also use MaybeUninit to have a global variable that will hold
-// the value from before system reset.
-
 /// DFU runtime class
 pub mod class;
 
