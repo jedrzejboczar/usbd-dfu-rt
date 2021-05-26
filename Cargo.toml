@@ -6,3 +6,8 @@ edition = "2018"
 
 [dependencies]
 usb-device = "0.2"
+
+[dev-dependencies]
+# For code in doc-strings
+cortex-m = "0.7"
+cortex-m-rt = "0.6"

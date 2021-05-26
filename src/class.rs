@@ -17,10 +17,10 @@ const DFU_REQ_DETACH: u8 = 0;
 
 /// Implementation of DFU runtime class.
 ///
-/// Implements DFU_DETACH request and will call the [`enter_dfu`] callback
-/// when the request is received.
+/// Implements DFU_DETACH request and will call the [`DfuRuntimeOps::enter`] callback when
+/// the request is received.
 pub struct DfuRuntimeClass<T: DfuRuntimeOps> {
-    enter_dfu: T,
+    dfu_ops: T,
     iface: InterfaceNumber,
     timeout: Option<u16>,
 }
@@ -28,16 +28,18 @@ pub struct DfuRuntimeClass<T: DfuRuntimeOps> {
 /// Trait that defines device-specific operations for [`DfuRuntimeClass`].
 pub trait DfuRuntimeOps {
     /// Enter DFU mode.
+    ///
+    /// This is a callback that will be called after receiving the DFU_DETACH request.
     fn enter(&mut self);
 
     // TODO: get_time_ms, configurable DFU functional descriptor
 }
 
 impl<T: DfuRuntimeOps> DfuRuntimeClass<T> {
-    /// Crate the class
-    pub fn new<B: UsbBus>(alloc: &UsbBusAllocator<B>, enter_dfu: T) -> Self {
+    /// Crate new DFU run-time class with the given device-specific implementations.
+    pub fn new<B: UsbBus>(alloc: &UsbBusAllocator<B>, dfu_ops: T) -> Self {
         Self {
-            enter_dfu,
+            dfu_ops,
             iface: alloc.interface(),
             timeout: None,
         }
@@ -77,7 +79,7 @@ impl<T: DfuRuntimeOps, B: UsbBus> UsbClass<B> for DfuRuntimeClass<T> {
     fn poll(&mut self) {
         // TODO: implement timeout
         if let Some(_timeout) = self.timeout.take() {
-            self.enter_dfu.enter();
+            self.dfu_ops.enter();
         }
     }
 
