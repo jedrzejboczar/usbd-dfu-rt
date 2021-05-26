@@ -1,7 +1,7 @@
 #![no_std]
 #![deny(missing_docs)]
 
-//! Implementation of the DFU run-time class
+//! Implementation of the USB DFU run-time class
 //!
 //! # DFU run-time class
 //!

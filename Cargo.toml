@@ -3,6 +3,11 @@ name = "usbd-dfu-rt"
 version = "0.1.0"
 authors = ["Jędrzej Boczar <jedrzej.boczar@gmail.com>"]
 edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "Implementation of the USB DFU run-time class"
+repository = "https://github.com/jedrzejboczar/usbd-dfu-rt"
+keywords = ["no-std", "usb-device", "dfu"]
+categories = ["embedded", "no-std"]
 
 [dependencies]
 usb-device = "0.2"
