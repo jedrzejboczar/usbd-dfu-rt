@@ -69,3 +69,10 @@ impl DfuRuntimeOps for DFUBootloader {
     }
 }
 ```
+
+# TODO
+
+Missing functionality:
+
+[ ] Handle timeouts
+[ ] Make the descriptors configurable
