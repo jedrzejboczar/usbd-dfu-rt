@@ -15,8 +15,33 @@ request. This request means that the device should switch to DFU mode in prepara
 firmware upgrade. This usually means rebooting to a DFU-capable bootloader which then handles
 the upgrade.
 
+# Usage
+
 To use this class user must provide a callback that will perform the transition to DFU mode,
-which is highly device-specific.
+which is highly device-specific. Application specific behaviour is defined by implementing
+[`DfuRuntimeOps`].
+
+1. Define type that will implement [`DfuRuntimeOps`] and hold any additional state.
+2. Set `const` settings in [`DfuRuntimeOps`] or use the defaults.
+3. Implement [`DfuRuntimeOps::detach`] and optionally [`DfuRuntimeOps::allow`].
+4. Call [`DfuRuntimeClass::tick`] regularly.
+
+[`DfuRuntimeOps::allow`] is called when DFU_DETACH request is received and can be used
+to reject it or change the timeout value.
+
+Depending on the value of [`DfuRuntimeOps::WILL_DETACH`], [`DfuRuntimeOps::detach`] is called
+differently. With `WILL_DETACH=false` this class waits until USB reset from host is detected,
+and then it calls [`DfuRuntimeOps::detach`].
+
+With `WILL_DETACH=true`, `timeout` returned from [`DfuRuntimeOps::allow`] is used to wait
+before a call to [`DfuRuntimeOps::detach`]. This is usually wanted because the device should
+be able to respond to the detach request with an accept. Otherwise host may see detach errors.
+Because application often needs to perform some cleanup (disable peripherals, etc.), this
+timeout mechanism can be used to simplify user logic: in [`DfuRuntimeOps::allow`] return
+the time needed for application cleanup and start it, and when [`DfuRuntimeOps::detach`] is
+called the application can simply switch to DFU mode. For more complex logic, [`DfuRuntimeOps`]
+can store some state during [`DfuRuntimeOps::allow`] and perform the detaching in custom way
+while ignoring [`DfuRuntimeOps::detach`]
 
 # Example
 
@@ -32,12 +57,12 @@ the embedded bootloader. For this to work, we need a way for the firmware to det
 reset occured because we wanted to jump to DFU bootloader. This can be done by storing a magic
 value in the memory and checking it just after reset.
 
-The following code could be used to implement the logic described above. `enter` will be called
+The following code could be used to implement the logic described above. `detach` will be called
 on a DFU_DETACH request, setting the magic value and resetting the MCU. The `jump_bootloader`
 routine will be executed before any code that initializes RAM (due to the
 `#[cortex_m_rt::pre_init]` attribute), so the magic value will still be storing the value
 written before reset. It is then checked to see if we should perform a jump to the embedded
-bootloader.
+bootloader. Make sure to call [`DfuRuntimeClass::tick`] in the main loop.
 
 ```rust
 use core::mem::MaybeUninit;
@@ -63,16 +88,11 @@ unsafe fn jump_bootloader() {
 pub struct DFUBootloader;
 
 impl DfuRuntimeOps for DFUBootloader {
-    fn enter(&mut self) {
+    fn detach(&mut self) {
         unsafe { MAGIC.as_mut_ptr().write(MAGIC_JUMP_BOOTLOADER); }
         cortex_m::peripheral::SCB::sys_reset();
     }
 }
+
+// Remember to call .tick() regularly!
 ```
-
-# TODO
-
-Missing functionality:
-
-[ ] Handle timeouts
-[ ] Make the descriptors configurable
