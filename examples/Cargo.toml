@@ -1,0 +1,13 @@
+[package]
+name = "usbd-dfu-rt-example"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+usbd-dfu-rt = { path = ".." }
+
+cortex-m = "0.7"
+cortex-m-rt = "0.7"
+panic-halt = "0.2"
+stm32f0xx-hal = { version = "0.18", features = ["stm32f072", "rt", "stm32-usbd"] }
+usb-device = "0.2"
