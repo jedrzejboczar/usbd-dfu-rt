@@ -6,6 +6,23 @@ const DFU_SUBCLASS_FIRMWARE_UPGRADE: u8 = 0x01;
 const DFU_PROTOCOL_RUNTIME: u8 = 0x01;
 const DFU_TYPE_FUNCTIONAL: u8 = 0x21;
 const DFU_REQ_DETACH: u8 = 0;
+const DFU_REQ_GETSTATUS: u8 = 0x03;
+
+#[repr(u8)]
+#[derive(Clone, Copy)]
+enum DfuState {
+    /// Device is running its normal application.
+    AppIdle = 0,
+    /// Device is running its normal application, has received the DFU_DETACH request, and is waiting for a USB reset.
+    AppDetach = 1,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy)]
+enum DfuStatusCode {
+    /// No error condition is present.
+    OK = 0x00,
+}
 
 /// Implementation of DFU runtime class.
 ///
@@ -16,6 +33,7 @@ pub struct DfuRuntimeClass<T: DfuRuntimeOps> {
     ops: T,
     iface: InterfaceNumber,
     timeout: Option<u16>,
+    state: DfuState,
 }
 
 /// Trait that defines device-specific operations for [`DfuRuntimeClass`].
@@ -87,6 +105,7 @@ impl<T: DfuRuntimeOps> DfuRuntimeClass<T> {
             ops,
             iface: alloc.interface(),
             timeout: None,
+            state: DfuState::AppIdle,
         }
     }
 
@@ -155,6 +174,30 @@ impl<T: DfuRuntimeOps, B: UsbBus> UsbClass<B> for DfuRuntimeClass<T> {
             ])
     }
 
+    fn control_in(&mut self, xfer:ControlIn<B>) {
+        let req = xfer.request();
+
+        if !(req.request_type == control::RequestType::Class
+            && req.recipient == control::Recipient::Interface
+            && req.index == u8::from(self.iface) as u16)
+        {
+            return;
+        }
+
+        match req.request {
+            DFU_REQ_GETSTATUS => {
+                let status: [u8;6] = [DfuStatusCode::OK as u8,
+                                      0,0,0, // poll timeout in milliseconds
+                                      self.state as u8,
+                                      0]; // iString for status description
+                xfer.accept_with(&status).ok();
+            },
+            _ => {
+                xfer.reject().ok();
+            },
+        }
+    }
+
     fn control_out(&mut self, xfer: ControlOut<B>) {
         let req = xfer.request();
 
@@ -169,6 +212,7 @@ impl<T: DfuRuntimeOps, B: UsbBus> UsbClass<B> for DfuRuntimeClass<T> {
             DFU_REQ_DETACH => {
                 self.timeout = self.ops.allow(req.value);
                 if self.timeout.is_some() {
+                    self.state = DfuState::AppDetach;
                     xfer.accept().ok();
                 } else {
                     xfer.reject().ok();
