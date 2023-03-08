@@ -2,7 +2,7 @@
 name = "usbd-dfu-rt"
 version = "0.2.0"
 authors = ["Jędrzej Boczar <jedrzej.boczar@gmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Implementation of the USB DFU run-time class"
 repository = "https://github.com/jedrzejboczar/usbd-dfu-rt"
@@ -15,4 +15,4 @@ usb-device = "0.2"
 [dev-dependencies]
 # For code in doc-strings
 cortex-m = "0.7"
-cortex-m-rt = "0.6"
+cortex-m-rt = "0.7"
