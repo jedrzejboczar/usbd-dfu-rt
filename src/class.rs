@@ -137,6 +137,11 @@ impl<T: DfuRuntimeOps> DfuRuntimeClass<T> {
         &mut self.ops
     }
 
+    /// Get class interface number
+    pub fn interface(&self) -> InterfaceNumber {
+        self.iface
+    }
+
     const fn dfu_bm_attributes() -> u8 {
         (T::WILL_DETACH as u8) << 3
         | (T::MANIFESTATION_TOLERANT as u8) << 2
