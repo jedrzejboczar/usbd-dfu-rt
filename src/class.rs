@@ -152,6 +152,8 @@ impl<T: DfuRuntimeOps> DfuRuntimeClass<T> {
 
 impl<T: DfuRuntimeOps, B: UsbBus> UsbClass<B> for DfuRuntimeClass<T> {
     fn get_configuration_descriptors(&self, writer: &mut DescriptorWriter) -> Result<()> {
+        // NOTE: it seems that this is necessary even though we have 1 interface,
+        // without IAD dfu-util fails to detach the device
         writer.iad(
             self.iface,
             1,
