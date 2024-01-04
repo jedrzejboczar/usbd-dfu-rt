@@ -159,7 +159,8 @@ impl<T: DfuRuntimeOps, B: UsbBus> UsbClass<B> for DfuRuntimeClass<T> {
             1,
             USB_CLASS_APPLICATION_SPECIFIC,
             DFU_SUBCLASS_FIRMWARE_UPGRADE,
-            DFU_PROTOCOL_RUNTIME)?;
+            DFU_PROTOCOL_RUNTIME,
+            None)?;
 
         writer.interface(
             self.iface,
