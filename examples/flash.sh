@@ -15,7 +15,7 @@ name="usbd-dfu-rt-example"
 binary="target/$name.bin"
 
 cargo build --release
-cargo objcopy --bin "$name" -- -O binary "$binary"
+cargo objcopy --release --bin "$name" -- -O binary "$binary"
 
 dfu-util \
     --device "$stm32dfu_id" \

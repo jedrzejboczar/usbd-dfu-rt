@@ -8,7 +8,7 @@ use panic_halt as _;
 use cortex_m_rt::entry;
 use stm32f0xx_hal as hal;
 use hal::{prelude::*, pac};
-use usb_device::device::{UsbVidPid, UsbDeviceBuilder};
+use usb_device::{device::{UsbVidPid, UsbDeviceBuilder}, prelude::StringDescriptors};
 use usbd_dfu_rt::{DfuRuntimeClass, DfuRuntimeOps};
 
 // Location of the embedded bootloader in stm32f072
@@ -97,9 +97,13 @@ fn main() -> ! {
 
     // https://pid.codes
     let mut usb_dev = UsbDeviceBuilder::new(&usb_bus, UsbVidPid(0x1209, 0x0001))
-        .manufacturer("usb-dfu-rt example")
-        .product("usb-dfu-rt example")
-        .serial_number(env!("CARGO_PKG_VERSION"))
+        .strings(&[
+            StringDescriptors::default()
+                .manufacturer("usb-dfu-rt example")
+                .product("usb-dfu-rt example")
+                .serial_number(env!("CARGO_PKG_VERSION"))
+        ])
+        .unwrap()
         .build();
 
     loop {
